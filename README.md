@@ -6,6 +6,17 @@ It structures the forward-deployed engineering lifecycle — **requirements → 
 
 Named for the thread that guided Theseus through the labyrinth: Ariadne is the thread connecting a messy requirement to the code that satisfies it, so you can always trace your way back.
 
+<table>
+  <tr>
+    <td width="50%"><img src="media/hero-maze.jpg" alt="A concrete maze viewed from above" width="100%"></td>
+    <td width="50%"><img src="media/hero-restaurant.jpg" alt="A server pouring wine at a riverside restaurant table" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Every requirement starts as a labyrinth.</sub></td>
+    <td align="center"><sub>Ariadne gets it to the right table.</sub></td>
+  </tr>
+</table>
+
 ---
 
 ## Table of contents
