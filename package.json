@@ -2,7 +2,7 @@
   "name": "ariadne",
   "displayName": "Ariadne",
   "description": "Ariadne turns messy business requirements into structured, traceable engineering work — the thread connecting requirements, specs, tasks, and code. Works with Claude Code, Cursor, Copilot, or local models.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "ariadne",
   "private": true,
   "license": "MIT",
