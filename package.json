@@ -1,0 +1,200 @@
+{
+  "name": "ariadne",
+  "displayName": "Ariadne",
+  "description": "Ariadne turns messy business requirements into structured, traceable engineering work — the thread connecting requirements, specs, tasks, and code. Works with Claude Code, Cursor, Copilot, or local models.",
+  "version": "0.1.1",
+  "publisher": "ariadne",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "ariadne",
+    "forward-deployed",
+    "requirements",
+    "traceability",
+    "claude",
+    "ai"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ariadne",
+          "title": "Ariadne",
+          "icon": "media/activity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "ariadne": [
+        {
+          "type": "webview",
+          "id": "ariadne.translatorView",
+          "name": "Translator"
+        },
+        {
+          "id": "ariadne.traceabilityView",
+          "name": "Traceability"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "ariadne.traceabilityView",
+        "contents": "No traceability links yet.\nLinks appear once requirements are connected to specs, tasks, and files.\n[Open Translator](command:ariadne.focusTranslator)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "ariadne.decompose",
+        "title": "Ariadne: Decompose Clipboard into Requirements",
+        "category": "Ariadne",
+        "icon": "$(clippy)"
+      },
+      {
+        "command": "ariadne.generateSpec",
+        "title": "Ariadne: Generate Spec from Requirements",
+        "category": "Ariadne",
+        "icon": "$(file-text)"
+      },
+      {
+        "command": "ariadne.generateTasks",
+        "title": "Ariadne: Generate Tasks from Spec",
+        "category": "Ariadne",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "ariadne.interrogate",
+        "title": "Ariadne: Check Spec Health (Interrogate)",
+        "category": "Ariadne",
+        "icon": "$(search)"
+      },
+      {
+        "command": "ariadne.runTask",
+        "title": "Ariadne: Run Task with Backend",
+        "category": "Ariadne",
+        "icon": "$(play)"
+      },
+      {
+        "command": "ariadne.markVerified",
+        "title": "Ariadne: Toggle Requirement Verified",
+        "category": "Ariadne"
+      },
+      {
+        "command": "ariadne.selectBackend",
+        "title": "Ariadne: Select AI Backend",
+        "category": "Ariadne",
+        "icon": "$(server-process)"
+      },
+      {
+        "command": "ariadne.setApiKey",
+        "title": "Ariadne: Set Anthropic API Key (Context Engine)",
+        "category": "Ariadne"
+      },
+      {
+        "command": "ariadne.openDashboard",
+        "title": "Ariadne: Open Dashboard",
+        "category": "Ariadne",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "ariadne.refresh",
+        "title": "Ariadne: Refresh",
+        "category": "Ariadne",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "ariadne.focusTranslator",
+        "title": "Ariadne: Focus Translator",
+        "category": "Ariadne"
+      },
+      {
+        "command": "ariadne.openFile",
+        "title": "Ariadne: Open File",
+        "category": "Ariadne"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "ariadne.refresh",
+          "when": "view == ariadne.translatorView || view == ariadne.traceabilityView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ariadne.openDashboard",
+          "when": "view == ariadne.translatorView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "ariadne.selectBackend",
+          "when": "view == ariadne.translatorView",
+          "group": "navigation@3"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Ariadne",
+      "properties": {
+        "ariadne.contextEngine.model": {
+          "type": "string",
+          "default": "claude-opus-5",
+          "description": "Anthropic model used for the Context Engine (/ariadne-decompose, /ariadne-spec, /ariadne-interrogate). Billed to Ariadne's own Anthropic API key, not the task-execution backend."
+        },
+        "ariadne.preferredBackend": {
+          "type": "string",
+          "enum": [
+            "claude-code",
+            "vscode-lm",
+            "ollama"
+          ],
+          "default": "claude-code",
+          "description": "Default AI backend used for 'Run with [Backend]' task execution."
+        },
+        "ariadne.ollama.url": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Base URL for the local Ollama server (used by the Assistant tab and as a selectable execution backend)."
+        },
+        "ariadne.ollama.model": {
+          "type": "string",
+          "default": "llama3.2",
+          "description": "Ollama model used by the Assistant chat."
+        },
+        "ariadne.claudeCode.command": {
+          "type": "string",
+          "default": "claude",
+          "description": "Command used to invoke the Claude Code CLI."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "typecheck": "tsc --noEmit -p ./",
+    "package": "node esbuild.js --production"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/codicons": "^0.0.46-24",
+    "@vscode/vsce": "^3.9.2",
+    "esbuild": "^0.21.5",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.116.0"
+  }
+}

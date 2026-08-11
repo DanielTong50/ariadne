@@ -1,0 +1,12 @@
+node_modules/
+dist/
+out/
+*.vsix
+.vscode-test/
+.DS_Store
+
+# Runtime data scaffolded by the extension itself — only relevant if this repo's
+# own root ever gets opened as a workspace while testing (F5 with no folder arg,
+# etc). Never intended to ship or be tracked.
+.ariadne/
+.fde/
