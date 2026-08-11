@@ -11,10 +11,6 @@ Named for the thread that guided Theseus through the labyrinth: Ariadne is the t
     <td width="50%"><img src="media/hero-maze.jpg" alt="A concrete maze viewed from above" width="100%"></td>
     <td width="50%"><img src="media/hero-restaurant.jpg" alt="A server pouring wine at a riverside restaurant table" width="100%"></td>
   </tr>
-  <tr>
-    <td align="center"><sub>Every requirement starts as a labyrinth.</sub></td>
-    <td align="center"><sub>Ariadne gets it to the right table.</sub></td>
-  </tr>
 </table>
 
 ---
