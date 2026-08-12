@@ -25,17 +25,26 @@ export class TraceabilityTreeProvider implements vscode.TreeDataProvider<TraceNo
 
     if (node.kind === 'requirement') {
       const req = requirements.find((r) => r.id === node.requirementId);
+      const verified = req?.status === 'verified';
       const item = new vscode.TreeItem(req?.title ?? node.requirementId, vscode.TreeItemCollapsibleState.Collapsed);
-      item.description = req?.status;
-      item.iconPath = new vscode.ThemeIcon(req?.status === 'verified' ? 'pass' : 'circle-outline');
+      item.description = req ? `${req.type} · ${req.status}` : undefined;
+      item.tooltip = req ? `${req.title}\n\n${req.description}` : undefined;
+      item.iconPath = new vscode.ThemeIcon(
+        verified ? 'pass-filled' : 'circle-large-outline',
+        new vscode.ThemeColor(verified ? 'testing.iconPassed' : 'descriptionForeground'),
+      );
       item.contextValue = 'fdeRequirement';
       return item;
     }
     if (node.kind === 'spec') {
       const spec = specs.find((s) => s.id === node.specId);
       const item = new vscode.TreeItem(spec?.title ?? node.specId, vscode.TreeItemCollapsibleState.Collapsed);
-      item.description = spec?.status;
-      item.iconPath = new vscode.ThemeIcon('file-text');
+      item.description = spec ? `${spec.status} · ${spec.acceptanceCriteria.length} criteria` : undefined;
+      item.tooltip = spec
+        ? `${spec.title}\n\n${spec.acceptanceCriteria.length} acceptance criteria · ${spec.requirementIds.length} requirement(s) linked`
+        : undefined;
+      const specColorId = spec?.status === 'approved' ? 'testing.iconPassed' : spec?.status === 'reviewed' ? 'charts.blue' : 'descriptionForeground';
+      item.iconPath = new vscode.ThemeIcon('file-text', new vscode.ThemeColor(specColorId));
       item.contextValue = 'fdeSpec';
       if (spec) {
         item.command = {
@@ -50,10 +59,11 @@ export class TraceabilityTreeProvider implements vscode.TreeDataProvider<TraceNo
       const task = tasks.find((t) => t.id === node.taskId);
       const collapsible = task && task.files.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
       const item = new vscode.TreeItem(task?.title ?? node.taskId, collapsible);
-      item.description = task?.status;
-      item.iconPath = new vscode.ThemeIcon(
-        task?.status === 'done' ? 'check' : task?.status === 'in-progress' ? 'sync' : 'circle-large-outline',
-      );
+      item.description = task ? `${task.status} · ${task.files.length} file${task.files.length === 1 ? '' : 's'}` : undefined;
+      item.tooltip = task ? `${task.title}\n\n${task.description}` : undefined;
+      const taskIconId = task?.status === 'done' ? 'pass-filled' : task?.status === 'in-progress' ? 'sync' : 'circle-large-outline';
+      const taskColorId = task?.status === 'done' ? 'testing.iconPassed' : task?.status === 'in-progress' ? 'charts.yellow' : 'descriptionForeground';
+      item.iconPath = new vscode.ThemeIcon(taskIconId, new vscode.ThemeColor(taskColorId));
       item.contextValue = 'fdeTask';
       return item;
     }

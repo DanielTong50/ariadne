@@ -146,6 +146,9 @@ export class TranslatorViewProvider implements vscode.WebviewViewProvider {
         case 'openDashboard':
           await vscode.commands.executeCommand('ariadne.openDashboard');
           break;
+        case 'openTraceabilityGraph':
+          await vscode.commands.executeCommand('ariadne.openTraceabilityGraph');
+          break;
         case 'setApiKey':
           await this.app.engine.setApiKey();
           break;
@@ -256,7 +259,7 @@ const STYLE = `
   .backend-pill {
     display: inline-flex; align-items: center; gap: 6px;
     background: transparent; border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.3));
-    border-radius: 100px; padding: 3px 8px 3px 6px; font-size: 11px; color: var(--vscode-foreground);
+    border-radius: var(--r-sm); padding: 3px 8px 3px 6px; font-size: 11px; color: var(--vscode-foreground);
   }
   .backend-pill:hover { background: var(--vscode-toolbar-hoverBackground); }
   .backend-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
@@ -274,8 +277,8 @@ const STYLE = `
   .tab .codicon { font-size: 13px; }
   .tab.active { opacity: 1; border-bottom-color: var(--vscode-focusBorder); font-weight: 600; }
   .tab-count {
-    font-size: 9.5px; background: var(--vscode-badge-background); color: var(--vscode-badge-foreground);
-    border-radius: 8px; padding: 0 5px; min-width: 14px; line-height: 15px;
+    font-size: 9.5px; font-family: var(--mono); background: var(--vscode-badge-background); color: var(--vscode-badge-foreground);
+    border-radius: var(--r-badge); padding: 0 5px; min-width: 14px; line-height: 15px;
   }
   .tab.active .tab-count { background: var(--vscode-focusBorder); color: var(--vscode-editor-background); }
 
@@ -285,7 +288,7 @@ const STYLE = `
   /* ---- Composer ---- */
   .composer {
     border: 1px dashed var(--vscode-widget-border, rgba(128,128,128,0.4));
-    border-radius: 6px; padding: 10px; margin-bottom: 12px; transition: border-color 0.12s, background 0.12s;
+    border-radius: var(--r-sm); padding: 10px; margin-bottom: 12px; transition: border-color 0.12s, background 0.12s;
   }
   .composer.drag { border-color: var(--vscode-focusBorder); background: color-mix(in srgb, var(--vscode-focusBorder) 6%, transparent); border-style: solid; }
   .composer-header { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; margin-bottom: 7px; }
@@ -295,7 +298,7 @@ const STYLE = `
   .composer-toolbar-left { display: flex; gap: 4px; }
   .file-label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
   .composer-error {
-    margin-top: 8px; padding: 6px 8px; border-radius: 4px; font-size: 11.5px;
+    margin-top: 8px; padding: 6px 8px; border-radius: var(--r-sm); font-size: 11.5px;
     background: var(--vscode-inputValidation-errorBackground); color: var(--vscode-errorForeground, var(--vscode-foreground));
     border: 1px solid var(--vscode-inputValidation-errorBorder, transparent);
   }
@@ -305,19 +308,19 @@ const STYLE = `
     border-color: var(--vscode-inputValidation-infoBorder, transparent);
   }
   .manual-toggle { font-size: 11px; margin-bottom: 10px; display: inline-block; }
-  .manual-form { border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.3)); border-radius: 6px; padding: 10px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .manual-form { border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.3)); border-radius: var(--r-sm); padding: 10px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
   .manual-form input, .manual-form textarea, .manual-form select { width: 100%; }
   .manual-form textarea { min-height: 44px; resize: vertical; }
   .manual-form-row { display: flex; gap: 6px; align-items: center; }
   .manual-form-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 2px; }
 
   /* ---- Staging ---- */
-  .staging { border: 1px solid var(--vscode-focusBorder); border-radius: 6px; padding: 10px; margin-bottom: 14px; background: color-mix(in srgb, var(--vscode-focusBorder) 5%, transparent); }
+  .staging { border: 1px solid var(--vscode-focusBorder); border-radius: var(--r-sm); padding: 10px; margin-bottom: 14px; background: color-mix(in srgb, var(--vscode-focusBorder) 5%, transparent); }
   .staging-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .staging-title { font-size: 11.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
   .staging-title .codicon { color: var(--vscode-charts-blue, #3987e5); }
   .staging-actions { display: flex; gap: 4px; }
-  .staged-item { background: var(--vscode-editor-background); border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.25)); border-radius: 5px; padding: 8px; margin-bottom: 6px; }
+  .staged-item { background: var(--vscode-editor-background); border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.25)); border-radius: var(--r-sm); padding: 8px; margin-bottom: 6px; }
   .staged-item-top { display: flex; gap: 6px; align-items: center; margin-bottom: 5px; }
   .staged-item-top input[type="text"] { flex: 1; font-weight: 600; }
   .staged-item textarea { width: 100%; min-height: 36px; resize: vertical; font-size: 11.5px; }
@@ -327,7 +330,7 @@ const STYLE = `
   .card-list { display: flex; flex-direction: column; gap: 7px; }
   .card {
     border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.25));
-    border-radius: 6px; padding: 9px 10px; background: var(--vscode-sideBarSectionHeader-background, transparent);
+    border-radius: var(--r-sm); padding: 9px 10px; background: var(--vscode-sideBarSectionHeader-background, transparent);
     transition: border-color 0.12s;
   }
   .card:hover { border-color: var(--vscode-focusBorder); }
@@ -351,22 +354,24 @@ const STYLE = `
   .selection-bar span { font-size: 11.5px; font-weight: 500; }
   .selection-bar-actions { display: flex; gap: 6px; }
 
-  /* ---- Assistant ---- */
+  /* ---- Assistant: console/log style, not chat bubbles ---- */
   .chat-empty { padding: 30px 10px; }
-  .chat-log { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; max-height: calc(100vh - 190px); overflow-y: auto; padding-bottom: 4px; }
-  .chat-row { display: flex; gap: 7px; align-items: flex-start; }
-  .chat-row.user { flex-direction: row-reverse; }
-  .chat-avatar {
-    width: 20px; height: 20px; border-radius: 5px; display: flex; align-items: center; justify-content: center;
-    flex: none; font-size: 12px;
+  .chat-log { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; max-height: calc(100vh - 190px); overflow-y: auto; padding-bottom: 4px; }
+  .chat-turn {
+    padding: 6px 0 6px 10px;
+    border-left: 3px solid var(--vscode-widget-border, rgba(128,128,128,0.3));
   }
-  .chat-row.user .chat-avatar { background: var(--vscode-charts-blue, #3987e5); color: white; }
-  .chat-row.assistant .chat-avatar { background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); }
-  .chat-msg { border-radius: 8px; padding: 6px 9px; font-size: 12px; white-space: pre-wrap; line-height: 1.5; max-width: 84%; }
-  .chat-row.user .chat-msg { background: var(--vscode-charts-blue, #3987e5); color: white; border-top-right-radius: 2px; }
-  .chat-row.assistant .chat-msg { background: var(--vscode-editorInactiveSelectionBackground, var(--vscode-editor-inactiveSelectionBackground)); border-top-left-radius: 2px; }
-  .chat-msg.error { background: var(--vscode-inputValidation-errorBackground); color: var(--vscode-errorForeground); }
-  .chat-msg.pending { opacity: 0.65; }
+  .chat-turn.user { border-left-color: var(--vscode-charts-blue, #3987e5); }
+  .chat-turn.error { border-left-color: var(--vscode-charts-red, #f14c4c); }
+  .chat-role {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; opacity: 0.55; margin-bottom: 3px;
+  }
+  .chat-turn.user .chat-role { color: var(--vscode-charts-blue, #3987e5); opacity: 0.95; }
+  .chat-turn.error .chat-role { color: var(--vscode-charts-red, #f14c4c); opacity: 0.95; }
+  .chat-msg { font-size: 12px; white-space: pre-wrap; line-height: 1.55; }
+  .chat-msg.error { color: var(--vscode-errorForeground); }
+  .chat-msg.pending { opacity: 0.6; }
   .chat-input { display: flex; gap: 6px; align-items: flex-end; }
   .chat-input textarea { flex: 1; resize: none; min-height: 34px; max-height: 120px; }
   .chat-hint { font-size: 10.5px; opacity: 0.55; margin-top: 5px; }
@@ -381,6 +386,7 @@ const BODY = `
   </button>
   <div class="topbar-actions">
     <button class="ghost icon-only" id="btn-dashboard" title="Open Dashboard"><span class="codicon codicon-graph-line"></span></button>
+    <button class="ghost icon-only" id="btn-graph" title="Open Traceability Graph"><span class="codicon codicon-type-hierarchy"></span></button>
     <button class="ghost icon-only" id="btn-refresh" title="Refresh"><span class="codicon codicon-refresh"></span></button>
   </div>
 </div>
@@ -553,6 +559,7 @@ function switchTab(name) {
 /* ---------------- Topbar ---------------- */
 document.getElementById('btn-backend').addEventListener('click', () => vscode.postMessage({ command: 'selectBackend' }));
 document.getElementById('btn-dashboard').addEventListener('click', () => vscode.postMessage({ command: 'openDashboard' }));
+document.getElementById('btn-graph').addEventListener('click', () => vscode.postMessage({ command: 'openTraceabilityGraph' }));
 document.getElementById('btn-refresh').addEventListener('click', () => vscode.postMessage({ command: 'refresh' }));
 
 /* ---------------- Composer ---------------- */
@@ -683,11 +690,12 @@ function sendChat() {
   vscode.postMessage({ command: 'assistantSend', text });
   ta.value = '';
 }
-function appendChat(role, text, pending) {
+function appendChat(role, text, pending, isError) {
   const log = document.getElementById('chat-log');
-  const row = el('div', { class: 'chat-row ' + role }, [
-    el('div', { class: 'chat-avatar' }, [icon(role === 'user' ? 'account' : 'robot')]),
-    el('div', { class: 'chat-msg' + (pending ? ' pending' : ''), text: pending ? 'Thinking…' : text }),
+  const roleLabel = role === 'user' ? 'You' : 'Assistant';
+  const row = el('div', { class: 'chat-turn ' + role + (isError ? ' error' : '') }, [
+    el('div', { class: 'chat-role', text: roleLabel }),
+    el('div', { class: 'chat-msg' + (pending ? ' pending' : '') + (isError ? ' error' : ''), text: pending ? 'Thinking…' : text }),
   ]);
   log.appendChild(row);
   log.scrollTop = log.scrollHeight;
@@ -721,8 +729,14 @@ window.addEventListener('message', (event) => {
     if (pendingChatBubble) { pendingChatBubble.classList.remove('pending'); pendingChatBubble.textContent = msg.text; pendingChatBubble = null; }
     else appendChat('assistant', msg.text);
   } else if (msg.type === 'assistantError') {
-    if (pendingChatBubble) { pendingChatBubble.classList.remove('pending'); pendingChatBubble.classList.add('error'); pendingChatBubble.textContent = msg.message; pendingChatBubble = null; }
-    else appendChat('assistant', msg.message);
+    if (pendingChatBubble) {
+      pendingChatBubble.classList.remove('pending');
+      pendingChatBubble.classList.add('error');
+      pendingChatBubble.closest('.chat-turn').classList.add('error');
+      pendingChatBubble.textContent = msg.message;
+      pendingChatBubble = null;
+    }
+    else appendChat('assistant', msg.message, false, true);
   }
 });
 
@@ -774,7 +788,7 @@ function renderRequirements() {
       updateSelectionBar();
     });
     const verified = r.status === 'verified';
-    const card = el('div', { class: 'card' }, [
+    const card = el('div', { class: 'card accent-bar type-' + r.type }, [
       el('div', { class: 'card-row' }, [
         el('div', { class: 'card-select' }, [checkbox]),
         el('div', { class: 'card-body' }, [
@@ -804,15 +818,15 @@ function renderSpecs() {
   }
   state.specs.slice().reverse().forEach((s) => {
     const findings = s.health ? (s.health.ambiguities.length + s.health.gaps.length + s.health.conflicts.length) : null;
-    let healthChip;
-    if (findings === null) healthChip = statusChip('Not checked', 'status-neutral', 'circle-large-outline');
-    else if (findings === 0) healthChip = statusChip('Healthy', 'status-good', 'pass-filled');
-    else healthChip = statusChip(findings + ' finding' + (findings === 1 ? '' : 's'), 'status-warning', 'warning');
+    let toneClass, healthChip;
+    if (findings === null) { toneClass = 'status-neutral'; healthChip = statusChip('Not checked', toneClass, 'circle-large-outline'); }
+    else if (findings === 0) { toneClass = 'status-good'; healthChip = statusChip('Healthy', toneClass, 'pass-filled'); }
+    else { toneClass = 'status-warning'; healthChip = statusChip(findings + ' finding' + (findings === 1 ? '' : 's'), toneClass, 'warning'); }
 
     const taskCount = state.tasks.filter((t) => t.specId === s.id).length;
     const doneCount = state.tasks.filter((t) => t.specId === s.id && t.status === 'done').length;
 
-    list.appendChild(el('div', { class: 'card' }, [
+    list.appendChild(el('div', { class: 'card accent-bar ' + toneClass }, [
       el('div', { class: 'card-body' }, [
         el('div', { class: 'card-chips' }, [statusChip(s.status, 'status-neutral', 'file-text'), healthChip]),
         el('div', { class: 'card-title', text: s.title }),
@@ -839,10 +853,10 @@ function renderTasks() {
     return;
   }
   state.tasks.slice().reverse().forEach((t) => {
-    let statusEl;
-    if (t.status === 'done') statusEl = statusChip('Done', 'status-good', 'pass-filled');
-    else if (t.status === 'in-progress') statusEl = statusChip('In progress', 'status-warning', 'sync');
-    else statusEl = statusChip('To do', 'status-neutral', 'circle-large-outline');
+    let statusEl, toneClass;
+    if (t.status === 'done') { toneClass = 'status-good'; statusEl = statusChip('Done', toneClass, 'pass-filled'); }
+    else if (t.status === 'in-progress') { toneClass = 'status-warning'; statusEl = statusChip('In progress', toneClass, 'sync'); }
+    else { toneClass = 'status-neutral'; statusEl = statusChip('To do', toneClass, 'circle-large-outline'); }
 
     const runBtn = el('button', { onclick: () => vscode.postMessage({ command: 'runTask', id: t.id, backendId: state.activeBackendId }) }, [
       icon(t.status === 'in-progress' ? 'loading' : 'play', t.status === 'in-progress' ? 'codicon-modifier-spin' : ''),
@@ -850,7 +864,7 @@ function renderTasks() {
     ]);
     runBtn.disabled = t.status === 'in-progress';
 
-    list.appendChild(el('div', { class: 'card' }, [
+    list.appendChild(el('div', { class: 'card accent-bar ' + toneClass }, [
       el('div', { class: 'card-body' }, [
         el('div', { class: 'card-chips' }, [statusEl]),
         el('div', { class: 'card-title', text: t.title }),

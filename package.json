@@ -55,7 +55,7 @@
     "viewsWelcome": [
       {
         "view": "ariadne.traceabilityView",
-        "contents": "No traceability links yet.\nLinks appear once requirements are connected to specs, tasks, and files.\n[Open Translator](command:ariadne.focusTranslator)"
+        "contents": "No traceability links yet.\nLinks appear once requirements are connected to specs, tasks, and files.\n[Open Translator](command:ariadne.focusTranslator)\n[Open Traceability Graph](command:ariadne.openTraceabilityGraph)"
       }
     ],
     "commands": [
@@ -112,6 +112,12 @@
         "icon": "$(dashboard)"
       },
       {
+        "command": "ariadne.openTraceabilityGraph",
+        "title": "Ariadne: Open Traceability Graph",
+        "category": "Ariadne",
+        "icon": "$(type-hierarchy)"
+      },
+      {
         "command": "ariadne.refresh",
         "title": "Ariadne: Refresh",
         "category": "Ariadne",
@@ -144,6 +150,11 @@
           "command": "ariadne.selectBackend",
           "when": "view == ariadne.translatorView",
           "group": "navigation@3"
+        },
+        {
+          "command": "ariadne.openTraceabilityGraph",
+          "when": "view == ariadne.traceabilityView",
+          "group": "navigation@2"
         }
       ]
     },

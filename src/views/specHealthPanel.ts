@@ -24,10 +24,17 @@ export function showSpecHealthPanel(app: AppContext, specTitle: string, health: 
 
 function section(iconName: string, title: string, items: string[], emptyLabel: string, tone: string): string {
   const body = items.length
-    ? `<ul>${items.map((i) => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`
+    ? `<div class="finding-list">${items
+        .map(
+          (i) => `<div class="finding-row accent-bar ${tone}">
+            <span class="codicon codicon-${iconName} finding-icon"></span>
+            <span class="finding-text">${escapeHtml(i)}</span>
+          </div>`,
+        )
+        .join('')}</div>`
     : `<p class="empty">${escapeHtml(emptyLabel)}</p>`;
   return `<section class="finding-section">
-    <h2><span class="dot ${tone}"></span><span class="codicon codicon-${iconName}"></span>${title}<span class="count">${items.length}</span></h2>
+    <h2><span class="dot ${tone}"></span><span class="codicon codicon-${iconName}"></span>${title}<span class="count mono">${items.length}</span></h2>
     ${body}
   </section>`;
 }
@@ -45,7 +52,7 @@ function render(app: AppContext, webview: vscode.Webview, specTitle: string, hea
 </head>
 <body>
   <div class="page">
-    <header>
+    <header class="page-header">
       <div class="eyebrow"><span class="codicon codicon-search"></span>Spec health</div>
       <h1>${escapeHtml(specTitle)}</h1>
       <div class="subtitle">Checked ${new Date(health.checkedAt).toLocaleString()}</div>
@@ -70,14 +77,10 @@ function render(app: AppContext, webview: vscode.Webview, specTitle: string, hea
 const STYLE = `
   body { background: var(--vscode-editor-background); }
   .page { max-width: 720px; margin: 0 auto; padding: 34px 40px 60px; }
-  header { margin-bottom: 20px; }
-  .eyebrow { display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--vscode-charts-blue, #3987e5); font-weight: 600; margin-bottom: 6px; }
-  h1 { font-size: 19px; margin: 0 0 4px; font-weight: 600; }
-  .subtitle { opacity: 0.6; font-size: 12px; }
 
   .summary {
     display: flex; align-items: center; gap: 9px; font-size: 12.5px; margin-bottom: 26px;
-    padding: 10px 14px; border-radius: 8px; border: 1px solid transparent;
+    padding: 10px 14px; border-radius: var(--r-sm); border: 1px solid transparent;
   }
   .summary .codicon { font-size: 15px; flex: none; }
   .summary-good { background: color-mix(in srgb, var(--vscode-testing-iconPassed, #2ea043) 12%, transparent); color: var(--vscode-foreground); border-color: color-mix(in srgb, var(--vscode-testing-iconPassed, #2ea043) 30%, transparent); }
@@ -86,14 +89,18 @@ const STYLE = `
   .summary-warn .codicon { color: var(--vscode-charts-yellow, #d29933); }
 
   .finding-section { margin-bottom: 24px; }
-  .finding-section h2 {
-    font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
-    display: flex; align-items: center; gap: 7px; margin: 0 0 8px;
-  }
-  .finding-section h2 .codicon { font-size: 13px; }
+  .finding-section h2 { margin: 0 0 8px; }
   .count { opacity: 0.55; font-weight: normal; margin-left: 2px; }
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-color); flex: none; }
-  ul { margin: 0; padding-left: 20px; }
-  li { margin-bottom: 7px; font-size: 12.5px; line-height: 1.55; }
+
+  .finding-list { display: flex; flex-direction: column; gap: 6px; }
+  .finding-row {
+    display: flex; align-items: flex-start; gap: 8px;
+    border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.25));
+    border-radius: var(--r-sm); padding: 8px 10px;
+    background: var(--vscode-sideBarSectionHeader-background, transparent);
+  }
+  .finding-icon { font-size: 13px; margin-top: 1px; color: var(--status-color); flex: none; }
+  .finding-text { font-size: 12.5px; line-height: 1.55; }
   .empty { opacity: 0.55; font-size: 12px; font-style: italic; margin: 0; }
 `;

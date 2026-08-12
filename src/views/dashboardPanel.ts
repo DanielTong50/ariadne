@@ -53,6 +53,17 @@ const ACTIVITY_ICON: Record<ActivityKind, string> = {
   'task-status-changed': 'sync',
 };
 
+const ACTIVITY_TONE: Record<ActivityKind, string> = {
+  'requirement-added': 'status-neutral',
+  'requirement-verified': 'status-good',
+  'spec-generated': 'status-neutral',
+  'spec-health-checked': 'status-neutral',
+  'tasks-generated': 'status-neutral',
+  'task-run-started': 'status-warning',
+  'task-run-finished': 'status-good',
+  'task-status-changed': 'status-neutral',
+};
+
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const s = Math.floor(diffMs / 1000);
@@ -147,16 +158,16 @@ async function render(app: AppContext, target: vscode.WebviewPanel): Promise<voi
       <div class="card ring-card">
         ${progressRing(done, inProgress, todo)}
         <div class="ring-legend">
-          <span class="legend-item"><span class="dot status-good"></span>${done} done</span>
-          <span class="legend-item"><span class="dot status-warning"></span>${inProgress} in progress</span>
-          <span class="legend-item"><span class="dot status-neutral"></span>${todo} to do</span>
+          <span class="legend-item"><span class="dot status-good"></span><span class="mono">${done}</span>&nbsp;done</span>
+          <span class="legend-item"><span class="dot status-warning"></span><span class="mono">${inProgress}</span>&nbsp;in progress</span>
+          <span class="legend-item"><span class="dot status-neutral"></span><span class="mono">${todo}</span>&nbsp;to do</span>
         </div>
       </div>
 
       <div class="stat-grid">
-        ${statTile('checklist', 'Requirements', String(requirements.length), `${verifiedPct}% verified`, verifiedPct)}
-        ${statTile('file-text', 'Specs', String(specs.length), `${reqWithSpecPct}% of requirements covered`, reqWithSpecPct)}
-        ${statTile('rocket', 'Tasks', String(tasks.length), `${tasksLinkedPct}% linked to requirements`, tasksLinkedPct)}
+        ${statTile('checklist', 'Requirements', String(requirements.length), `${verifiedPct}% verified`, verifiedPct, 'accent-blue')}
+        ${statTile('file-text', 'Specs', String(specs.length), `${reqWithSpecPct}% of requirements covered`, reqWithSpecPct, 'accent-purple')}
+        ${statTile('rocket', 'Tasks', String(tasks.length), `${tasksLinkedPct}% linked to requirements`, tasksLinkedPct, 'accent-orange')}
       </div>
     </section>
 
@@ -191,8 +202,8 @@ function stageStepper(reqCount: number, specCount: number, taskCount: number, do
   </div>`;
 }
 
-function statTile(iconName: string, label: string, value: string, sub: string, pct: number): string {
-  return `<div class="card stat-tile">
+function statTile(iconName: string, label: string, value: string, sub: string, pct: number, accentClass: string): string {
+  return `<div class="card stat-tile accent-bar ${accentClass}">
     <div class="stat-tile-top">
       <span class="codicon codicon-${iconName}"></span>
       <span class="stat-label">${escapeHtml(label)}</span>
@@ -213,7 +224,7 @@ function renderKpis(kpis: Kpi[] | undefined): string {
   }
   return `<div class="stat-grid">${kpis
     .map(
-      (k) => `<div class="card kpi-tile">
+      (k) => `<div class="card kpi-tile accent-bar accent-blue">
         <div class="stat-label">${escapeHtml(k.label)}</div>
         <div class="stat-value">${escapeHtml(String(k.value))}${k.unit ? `<span class="kpi-unit">${escapeHtml(k.unit)}</span>` : ''}</div>
       </div>`,
@@ -228,7 +239,7 @@ function renderFeed(activity: ActivityEntry[]): string {
   const rows = activity
     .slice(0, 60)
     .map(
-      (a) => `<div class="feed-row">
+      (a) => `<div class="feed-row accent-bar ${ACTIVITY_TONE[a.kind] ?? 'status-neutral'}">
         <div class="feed-icon"><span class="codicon codicon-${ACTIVITY_ICON[a.kind] ?? 'circle-small'}"></span></div>
         <div class="feed-body">
           <div class="feed-message">${escapeHtml(a.message)}</div>
@@ -242,27 +253,26 @@ function renderFeed(activity: ActivityEntry[]): string {
 
 const DASHBOARD_STYLE = `
   body { background: var(--vscode-editor-background); }
-  .page { max-width: 900px; margin: 0 auto; padding: 32px 40px 60px; }
   .page-header { margin-bottom: 22px; }
-  .page-header h1 { font-size: 21px; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; font-weight: 600; }
-  .page-header h1 .codicon { font-size: 20px; color: var(--vscode-charts-blue, #3987e5); }
-  .subtitle { opacity: 0.6; font-size: 12.5px; }
+  .page h2 { margin-top: 30px; margin-bottom: 12px; }
 
-  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.75; margin: 30px 0 12px; display: flex; align-items: center; gap: 7px; font-weight: 600; }
-  h2 .codicon { font-size: 13px; }
+  /* Restrained per-entity accent hues, reused across stat tiles + feed rows. */
+  .accent-blue   { --type-color: var(--vscode-charts-blue, #3987e5); }
+  .accent-purple { --type-color: var(--vscode-charts-purple, #9085e9); }
+  .accent-orange { --type-color: var(--vscode-charts-orange, #d95926); }
 
   .card {
     border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.25));
-    border-radius: 8px; background: var(--vscode-sideBarSectionHeader-background, transparent);
+    border-radius: var(--r-sm); background: var(--vscode-sideBarSectionHeader-background, transparent);
   }
 
   /* Stage stepper */
-  .stage-stepper { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.25)); border-radius: 8px; overflow-x: auto; }
-  .stage-pill { display: flex; align-items: center; gap: 9px; padding: 4px 10px; border-radius: 6px; flex: none; }
+  .stage-stepper { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.25)); border-radius: var(--r-sm); overflow-x: auto; }
+  .stage-pill { display: flex; align-items: center; gap: 9px; padding: 4px 10px; border-radius: var(--r-sm); flex: none; }
   .stage-pill .codicon { font-size: 17px; color: var(--vscode-descriptionForeground); }
   .stage-pill.accent .codicon { color: var(--vscode-testing-iconPassed, var(--vscode-charts-green, #2ea043)); }
   .stage-text { display: flex; flex-direction: column; line-height: 1.2; }
-  .stage-value { font-size: 17px; font-weight: 600; }
+  .stage-value { font-size: 17px; font-weight: 600; font-family: var(--mono); }
   .stage-label { font-size: 10.5px; opacity: 0.65; text-transform: uppercase; letter-spacing: 0.03em; }
   .stage-arrow { opacity: 0.35; font-size: 14px; flex: none; }
 
@@ -274,34 +284,35 @@ const DASHBOARD_STYLE = `
   .ring-caption { font-size: 9px; fill: var(--vscode-descriptionForeground); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--vscode-font-family); }
   .ring-legend { display: flex; flex-direction: column; gap: 5px; align-self: stretch; padding: 0 8px; }
   .legend-item { font-size: 11px; display: flex; align-items: center; gap: 6px; color: var(--vscode-descriptionForeground); }
+  .legend-item .mono { color: var(--vscode-foreground); }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--status-color); flex: none; }
 
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
   .stat-tile, .kpi-tile { padding: 13px 15px; }
   .stat-tile-top { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
-  .stat-tile-top .codicon { font-size: 14px; color: var(--vscode-charts-blue, #3987e5); }
+  .stat-tile-top .codicon { font-size: 14px; color: var(--type-color, var(--vscode-charts-blue, #3987e5)); }
   .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.03em; opacity: 0.65; font-weight: 600; }
-  .stat-value { font-size: 24px; font-weight: 600; line-height: 1.15; }
+  .stat-value { font-size: 24px; font-weight: 600; line-height: 1.15; font-family: var(--mono); }
   .stat-sub { font-size: 10.5px; opacity: 0.6; margin-top: 3px; margin-bottom: 8px; }
-  .kpi-unit { font-size: 12px; opacity: 0.6; margin-left: 3px; font-weight: 500; }
+  .kpi-unit { font-size: 12px; opacity: 0.6; margin-left: 3px; font-weight: 500; font-family: var(--vscode-font-family); }
 
-  .meter { height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--vscode-charts-blue, #3987e5) 18%, transparent); overflow: hidden; }
-  .meter-fill { height: 100%; background: var(--vscode-charts-blue, #3987e5); border-radius: 3px; }
+  .meter { height: 4px; border-radius: var(--r-badge); background: color-mix(in srgb, var(--type-color, var(--vscode-charts-blue, #3987e5)) 18%, transparent); overflow: hidden; }
+  .meter-fill { height: 100%; background: var(--type-color, var(--vscode-charts-blue, #3987e5)); border-radius: var(--r-badge); }
 
-  .kpi-hint { font-size: 12px; opacity: 0.75; line-height: 1.6; display: flex; gap: 8px; padding: 12px 14px; border: 1px dashed var(--vscode-widget-border, rgba(128,128,128,0.35)); border-radius: 8px; }
+  .kpi-hint { font-size: 12px; opacity: 0.75; line-height: 1.6; display: flex; gap: 8px; padding: 12px 14px; border: 1px dashed var(--vscode-widget-border, rgba(128,128,128,0.35)); border-radius: var(--r-sm); }
   .kpi-hint .codicon { margin-top: 1px; flex: none; }
-  code { background: var(--vscode-textCodeBlock-background); padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+  code { background: var(--vscode-textCodeBlock-background); padding: 1px 5px; border-radius: var(--r-badge); font-size: 11px; font-family: var(--mono); }
 
   /* Activity feed */
-  .feed { border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.25)); border-radius: 8px; padding: 4px 16px; }
-  .feed-row { display: flex; gap: 12px; padding: 10px 0; position: relative; }
+  .feed { border: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.25)); border-radius: var(--r-sm); padding: 4px 16px; }
+  .feed-row { display: flex; gap: 12px; padding: 10px 0 10px 11px; position: relative; }
   .feed-row:not(:last-child) { border-bottom: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.15)); }
   .feed-icon {
-    width: 22px; height: 22px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center;
-    background: var(--vscode-badge-background); color: var(--vscode-badge-foreground);
+    width: 20px; height: 20px; border-radius: var(--r-badge); flex: none; display: flex; align-items: center; justify-content: center;
+    background: var(--vscode-badge-background); color: var(--vscode-badge-foreground); margin-top: 1px;
   }
   .feed-icon .codicon { font-size: 12px; }
   .feed-body { flex: 1; min-width: 0; padding-top: 1px; }
   .feed-message { font-size: 12.5px; }
-  .feed-time { font-size: 10.5px; opacity: 0.55; margin-top: 2px; }
+  .feed-time { font-size: 10.5px; opacity: 0.55; margin-top: 2px; font-family: var(--mono); }
 `;

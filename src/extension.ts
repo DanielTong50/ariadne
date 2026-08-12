@@ -6,6 +6,7 @@ import { AppContext } from './appContext';
 import { TranslatorViewProvider } from './views/translatorPanel';
 import { TraceabilityTreeProvider } from './views/traceabilityTree';
 import { openDashboard } from './views/dashboardPanel';
+import { openTraceabilityGraph } from './views/traceabilityGraphPanel';
 import { runGenerateSpec } from './commands/generateSpec';
 import { runGenerateTasks } from './commands/generateTasks';
 import { runInterrogate } from './commands/interrogate';
@@ -57,6 +58,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('ariadne.selectBackend', () => selectBackend(app)),
     vscode.commands.registerCommand('ariadne.setApiKey', () => engine.setApiKey()),
     vscode.commands.registerCommand('ariadne.openDashboard', () => openDashboard(app)),
+    vscode.commands.registerCommand('ariadne.openTraceabilityGraph', () => openTraceabilityGraph(app)),
     vscode.commands.registerCommand('ariadne.openFile', (path: string) => openFileByPath(path)),
     vscode.commands.registerCommand('ariadne.focusTranslator', () => translatorProvider.reveal()),
     vscode.commands.registerCommand('ariadne.refresh', async () => {
