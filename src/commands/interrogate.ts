@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { AppContext } from '../appContext';
 import { SpecHealth } from '../types';
+import { resolveCodebaseContext } from '../utils/codebaseContext';
 import { showSpecHealthPanel } from '../views/specHealthPanel';
 
 /**
@@ -37,7 +38,8 @@ export async function runInterrogate(app: AppContext, specId?: string): Promise<
       try {
         const markdown = await app.store.getSpecMarkdown(spec);
         const linkedReqs = requirements.filter((r) => spec.requirementIds.includes(r.id));
-        const health = await app.engine.interrogate(spec, markdown, linkedReqs);
+        const codebaseSummary = await resolveCodebaseContext(app);
+        const health = await app.engine.interrogate(spec, markdown, linkedReqs, codebaseSummary);
         await app.store.updateSpec(spec.id, { health });
         await app.store.logActivity(
           'spec-health-checked',

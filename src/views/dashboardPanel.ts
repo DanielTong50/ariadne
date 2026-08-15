@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { AppContext } from '../appContext';
-import { ActivityEntry, ActivityKind } from '../types';
-import { codiconsDirUri, cspFor, escapeHtml, getNonce, localResourceRoots, SHARED_STYLE } from './webviewUtils';
+import { ActivityEntry, ActivityKind, CodebaseContextMeta } from '../types';
+import { codiconsDirUri, cspFor, escapeHtml, getNonce, localResourceRoots, relativeTime, SHARED_STYLE } from './webviewUtils';
 
 interface Kpi {
   label: string;
@@ -51,6 +51,7 @@ const ACTIVITY_ICON: Record<ActivityKind, string> = {
   'task-run-started': 'play',
   'task-run-finished': 'pass-filled',
   'task-status-changed': 'sync',
+  'codebase-ingested': 'database',
 };
 
 const ACTIVITY_TONE: Record<ActivityKind, string> = {
@@ -62,21 +63,8 @@ const ACTIVITY_TONE: Record<ActivityKind, string> = {
   'task-run-started': 'status-warning',
   'task-run-finished': 'status-good',
   'task-status-changed': 'status-neutral',
+  'codebase-ingested': 'status-good',
 };
-
-function relativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const s = Math.floor(diffMs / 1000);
-  if (s < 5) return 'just now';
-  if (s < 60) return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
 
 /** Status-segmented progress ring (done / in-progress / to-do), gapped per the mark spec. */
 function progressRing(done: number, inProgress: number, todo: number): string {
@@ -120,7 +108,7 @@ function meter(pct: number): string {
 }
 
 async function render(app: AppContext, target: vscode.WebviewPanel): Promise<void> {
-  const { requirements, specs, tasks, activity } = app.store.getState();
+  const { requirements, specs, tasks, activity, codebaseContext } = app.store.getState();
   const kpis = await readKpis(app);
 
   const done = tasks.filter((t) => t.status === 'done').length;
@@ -151,6 +139,8 @@ async function render(app: AppContext, target: vscode.WebviewPanel): Promise<voi
       <h1><span class="codicon codicon-dashboard"></span>Ariadne Dashboard</h1>
       <div class="subtitle">Requirements &rarr; Specs &rarr; Tasks &rarr; Code, at a glance.</div>
     </header>
+
+    ${codebaseStatusBanner(codebaseContext)}
 
     ${stageStepper(requirements.length, specs.length, tasks.length, done)}
 
@@ -230,6 +220,21 @@ function renderKpis(kpis: Kpi[] | undefined): string {
       </div>`,
     )
     .join('')}</div>`;
+}
+
+function codebaseStatusBanner(codebaseContext: CodebaseContextMeta | undefined): string {
+  if (!codebaseContext) {
+    return `<div class="kpi-hint">
+      <span class="codicon codicon-database"></span>
+      Codebase understanding: not built yet. Run <code>Ariadne: Ingest Codebase</code> (or the database icon in the Translator panel) so specs, tasks, and task runs are grounded in this repo.
+    </div>`;
+  }
+  return `<div class="kpi-hint">
+    <span class="codicon codicon-database"></span>
+    Codebase understanding: ingested ${relativeTime(codebaseContext.ingestedAt)} via ${escapeHtml(codebaseContext.backendName)}${
+      codebaseContext.gitCommit ? ` at <code>${escapeHtml(codebaseContext.gitCommit)}</code>` : ''
+    }.
+  </div>`;
 }
 
 function renderFeed(activity: ActivityEntry[]): string {

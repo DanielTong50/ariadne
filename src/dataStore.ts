@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
+import { createHash } from 'crypto';
 import {
   ActivityEntry,
   ActivityKind,
+  CodebaseContextMeta,
   FdeState,
   Requirement,
   Spec,
@@ -131,7 +133,7 @@ export class FdeDataStore implements vscode.Disposable {
   }
 
   private async load(): Promise<void> {
-    const [requirements, specs, tasks, traceability, activity] = await Promise.all([
+    const [requirements, specs, tasks, traceability, activity, codebaseContext] = await Promise.all([
       this.readJson<Requirement[]>(vscode.Uri.joinPath(this.fdeDir, 'requirements.json'), []),
       this.readJson<Spec[]>(vscode.Uri.joinPath(this.fdeDir, 'specs.json'), []),
       this.readJson<Task[]>(vscode.Uri.joinPath(this.fdeDir, 'tasks.json'), []),
@@ -140,8 +142,9 @@ export class FdeDataStore implements vscode.Disposable {
         updatedAt: nowIso(),
       }),
       this.readJson<ActivityEntry[]>(vscode.Uri.joinPath(this.fdeDir, 'activity.json'), []),
+      this.readJson<CodebaseContextMeta | undefined>(vscode.Uri.joinPath(this.fdeDir, 'codebase-context.json'), undefined),
     ]);
-    this.state = { requirements, specs, tasks, traceability, activity };
+    this.state = { requirements, specs, tasks, traceability, activity, codebaseContext };
   }
 
   getState(): FdeState {
@@ -336,6 +339,43 @@ export class FdeDataStore implements vscode.Disposable {
     this.state.activity = this.state.activity.slice(0, 200);
     await this.writeJson(vscode.Uri.joinPath(this.fdeDir, 'activity.json'), this.state.activity);
   }
+
+  // ---------- Codebase context (ingestion) ----------
+
+  codebaseContextFileUri(): vscode.Uri {
+    return vscode.Uri.joinPath(this.fdeDir, 'codebase-context.md');
+  }
+
+  async getCodebaseContextMarkdown(): Promise<string | undefined> {
+    try {
+      const bytes = await vscode.workspace.fs.readFile(this.codebaseContextFileUri());
+      return DEC.decode(bytes);
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** True if the file was hand-edited since the last ingestion (its hash no longer matches the stored one). */
+  async hasLocalEditsSinceIngest(): Promise<boolean> {
+    if (!this.state.codebaseContext) return false;
+    const current = await this.getCodebaseContextMarkdown();
+    if (current === undefined) return false;
+    return hashText(current) !== this.state.codebaseContext.contentHash;
+  }
+
+  async saveCodebaseContext(meta: Omit<CodebaseContextMeta, 'contentHash'>, markdown: string): Promise<CodebaseContextMeta> {
+    const full: CodebaseContextMeta = { ...meta, contentHash: hashText(markdown) };
+    await vscode.workspace.fs.writeFile(this.codebaseContextFileUri(), ENC.encode(markdown));
+    await this.writeJson(vscode.Uri.joinPath(this.fdeDir, 'codebase-context.json'), full);
+    this.state.codebaseContext = full;
+    await this.logActivity('codebase-ingested', `Built codebase understanding with ${meta.backendName}`);
+    this._onDidChange.fire();
+    return full;
+  }
+}
+
+function hashText(text: string): string {
+  return createHash('sha256').update(text).digest('hex');
 }
 
 type SpecStatusInput = Spec['status'];

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { AppContext } from '../appContext';
 
 /**
  * Lightweight codebase awareness: no embeddings, no AST parsing — just a
@@ -68,6 +69,12 @@ async function describeProject(files: WorkspaceFile[]): Promise<string | undefin
   return undefined;
 }
 
+/** Cheap file count for ingestion metadata — reuses the same cached listing as summarizeWorkspace(). */
+export async function countWorkspaceFiles(): Promise<number> {
+  const files = await listWorkspaceFiles();
+  return files.length;
+}
+
 /** A compact, prompt-sized description of the workspace: project type, structure, file mix. */
 export async function summarizeWorkspace(): Promise<string> {
   const files = await listWorkspaceFiles();
@@ -106,6 +113,18 @@ export async function summarizeWorkspace(): Promise<string> {
   ]
     .filter(Boolean)
     .join('\n');
+}
+
+/**
+ * The single place every AI call site should go for "what's this codebase
+ * like" — prefers the ingested, backend-authored understanding doc (see
+ * contextEngine/codebaseIngestion.ts) and falls back to the cheap heuristic
+ * summary when nothing has been ingested yet, so nothing breaks for users
+ * who never run "Ariadne: Ingest Codebase".
+ */
+export async function resolveCodebaseContext(app: AppContext): Promise<string> {
+  const ingested = await app.store.getCodebaseContextMarkdown();
+  return ingested ?? summarizeWorkspace();
 }
 
 const STOPWORDS = new Set([

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { AppContext } from '../appContext';
 import { Task } from '../types';
+import { resolveCodebaseContext } from '../utils/codebaseContext';
 
 /**
  * /ariadne-tasks — turns a spec's acceptance criteria into discrete Tasks via the
@@ -34,7 +35,8 @@ export async function runGenerateTasks(app: AppContext, specId?: string): Promis
     async () => {
       try {
         const markdown = await app.store.getSpecMarkdown(spec);
-        const generated = await app.engine.generateTasks(spec, markdown);
+        const codebaseSummary = await resolveCodebaseContext(app);
+        const generated = await app.engine.generateTasks(spec, markdown, codebaseSummary);
         if (generated.length === 0) {
           vscode.window.showInformationMessage('Ariadne: No tasks generated — the spec may need more detail.');
           return [];

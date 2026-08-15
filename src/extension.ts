@@ -12,6 +12,7 @@ import { runGenerateTasks } from './commands/generateTasks';
 import { runInterrogate } from './commands/interrogate';
 import { runTaskWithBackend } from './commands/runTask';
 import { markVerified, openFileByPath, selectBackend } from './commands/misc';
+import { runIngestCodebase } from './commands/ingestCodebase';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const output = vscode.window.createOutputChannel('Ariadne');
@@ -59,6 +60,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('ariadne.setApiKey', () => engine.setApiKey()),
     vscode.commands.registerCommand('ariadne.openDashboard', () => openDashboard(app)),
     vscode.commands.registerCommand('ariadne.openTraceabilityGraph', () => openTraceabilityGraph(app)),
+    vscode.commands.registerCommand('ariadne.ingestCodebase', () => runIngestCodebase(app)),
     vscode.commands.registerCommand('ariadne.openFile', (path: string) => openFileByPath(path)),
     vscode.commands.registerCommand('ariadne.focusTranslator', () => translatorProvider.reveal()),
     vscode.commands.registerCommand('ariadne.refresh', async () => {

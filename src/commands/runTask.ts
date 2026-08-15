@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { AppContext } from '../appContext';
 import { Task } from '../types';
-import { findRelevantFiles, summarizeWorkspace } from '../utils/codebaseContext';
+import { findRelevantFiles, resolveCodebaseContext } from '../utils/codebaseContext';
 
 const execAsync = promisify(exec);
 
@@ -26,7 +26,7 @@ async function buildPrompt(app: AppContext, task: Task): Promise<string> {
   const spec = specs.find((s) => s.id === task.specId);
   const reqs = requirements.filter((r) => task.requirementIds.includes(r.id));
 
-  const codebaseSummary = await summarizeWorkspace();
+  const codebaseSummary = await resolveCodebaseContext(app);
   const relevantFiles = await findRelevantFiles(
     [task.title, task.description, ...task.acceptanceCriteria].join(' '),
   );

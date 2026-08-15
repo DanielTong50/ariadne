@@ -66,6 +66,15 @@ export interface TraceabilityMap {
   updatedAt: string;
 }
 
+export interface CodebaseContextMeta {
+  ingestedAt: string;
+  backendId: string;
+  backendName: string;
+  gitCommit?: string;
+  fileCount: number;
+  contentHash: string; // sha256 of the .md body at write time, to detect local edits before overwriting
+}
+
 export type ActivityKind =
   | 'requirement-added'
   | 'requirement-verified'
@@ -74,7 +83,8 @@ export type ActivityKind =
   | 'tasks-generated'
   | 'task-run-started'
   | 'task-run-finished'
-  | 'task-status-changed';
+  | 'task-status-changed'
+  | 'codebase-ingested';
 
 export interface ActivityEntry {
   id: string;
@@ -89,6 +99,7 @@ export interface FdeState {
   tasks: Task[];
   traceability: TraceabilityMap;
   activity: ActivityEntry[];
+  codebaseContext?: CodebaseContextMeta;
 }
 
 export function newId(prefix: string): string {

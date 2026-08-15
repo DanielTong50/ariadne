@@ -3,12 +3,13 @@ import { AppContext } from '../appContext';
 import { decomposeText } from '../commands/decompose';
 import { runGenerateSpec } from '../commands/generateSpec';
 import { runGenerateTasks } from '../commands/generateTasks';
+import { runIngestCodebase } from '../commands/ingestCodebase';
 import { runInterrogate } from '../commands/interrogate';
 import { runTaskWithBackend } from '../commands/runTask';
 import { selectBackend } from '../commands/misc';
 import { OllamaChatMessage } from '../backends/ollamaAdapter';
 import { RequirementType } from '../types';
-import { codiconsDirUri, cspFor, getNonce, localResourceRoots, SHARED_STYLE } from './webviewUtils';
+import { codiconsDirUri, cspFor, getNonce, localResourceRoots, relativeTime, SHARED_STYLE } from './webviewUtils';
 
 interface InboundMessage {
   command: string;
@@ -149,6 +150,12 @@ export class TranslatorViewProvider implements vscode.WebviewViewProvider {
         case 'openTraceabilityGraph':
           await vscode.commands.executeCommand('ariadne.openTraceabilityGraph');
           break;
+        case 'ingestCodebase':
+          await runIngestCodebase(this.app);
+          break;
+        case 'openCodebaseContext':
+          await vscode.window.showTextDocument(this.app.store.codebaseContextFileUri(), { preview: true });
+          break;
         case 'setApiKey':
           await this.app.engine.setApiKey();
           break;
@@ -211,7 +218,7 @@ export class TranslatorViewProvider implements vscode.WebviewViewProvider {
   }
 
   private postState(): void {
-    const { requirements, specs, tasks } = this.app.store.getState();
+    const { requirements, specs, tasks, codebaseContext } = this.app.store.getState();
     const statuses = this.app.backends.getStatuses().map((s) => ({
       id: s.backend.id,
       name: s.backend.name,
@@ -225,6 +232,9 @@ export class TranslatorViewProvider implements vscode.WebviewViewProvider {
       tasks,
       backends: statuses,
       activeBackendId: this.app.backends.activeBackendId,
+      codebaseContext: codebaseContext
+        ? { ingestedAgo: relativeTime(codebaseContext.ingestedAt), backendName: codebaseContext.backendName }
+        : undefined,
     });
   }
 
@@ -267,7 +277,16 @@ const STYLE = `
   .backend-dot.off { background: var(--vscode-descriptionForeground); opacity: 0.5; }
   .topbar-actions { display: flex; gap: 2px; }
 
-  .tabs { display: flex; border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); position: sticky; top: 33px; background: var(--vscode-sideBar-background); z-index: 9; }
+  .status-strip {
+    display: flex; align-items: center; gap: 6px; padding: 4px 8px;
+    font-size: 10.5px; color: var(--vscode-descriptionForeground);
+    border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
+    position: sticky; top: 33px; background: var(--vscode-sideBar-background); z-index: 9;
+  }
+  .status-strip .codicon { font-size: 11px; flex: none; }
+  .status-strip a { margin-left: auto; font-size: 10.5px; flex: none; }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--vscode-widget-border, var(--vscode-panel-border)); position: sticky; top: 55px; background: var(--vscode-sideBar-background); z-index: 9; }
   .tab {
     flex: 1; padding: 7px 2px 6px; text-align: center; cursor: pointer;
     font-size: 11px; font-weight: 500; opacity: 0.65; border-bottom: 2px solid transparent;
@@ -387,8 +406,15 @@ const BODY = `
   <div class="topbar-actions">
     <button class="ghost icon-only" id="btn-dashboard" title="Open Dashboard"><span class="codicon codicon-graph-line"></span></button>
     <button class="ghost icon-only" id="btn-graph" title="Open Traceability Graph"><span class="codicon codicon-type-hierarchy"></span></button>
+    <button class="ghost icon-only" id="btn-ingest" title="Ingest Codebase (Build Context)"><span class="codicon codicon-database"></span></button>
     <button class="ghost icon-only" id="btn-refresh" title="Refresh"><span class="codicon codicon-refresh"></span></button>
   </div>
+</div>
+
+<div class="status-strip" id="codebase-status">
+  <span class="codicon codicon-database"></span>
+  <span id="codebase-status-text">Codebase understanding: not built yet</span>
+  <a id="codebase-open-link" style="display:none;">Open</a>
 </div>
 
 <div class="tabs">
@@ -560,7 +586,9 @@ function switchTab(name) {
 document.getElementById('btn-backend').addEventListener('click', () => vscode.postMessage({ command: 'selectBackend' }));
 document.getElementById('btn-dashboard').addEventListener('click', () => vscode.postMessage({ command: 'openDashboard' }));
 document.getElementById('btn-graph').addEventListener('click', () => vscode.postMessage({ command: 'openTraceabilityGraph' }));
+document.getElementById('btn-ingest').addEventListener('click', () => vscode.postMessage({ command: 'ingestCodebase' }));
 document.getElementById('btn-refresh').addEventListener('click', () => vscode.postMessage({ command: 'refresh' }));
+document.getElementById('codebase-open-link').addEventListener('click', () => vscode.postMessage({ command: 'openCodebaseContext' }));
 
 /* ---------------- Composer ---------------- */
 const composerEl = document.getElementById('composer');
@@ -746,10 +774,23 @@ function render() {
   document.getElementById('count-specs').textContent = state.specs.length;
   document.getElementById('count-tasks').textContent = state.tasks.length;
   renderBackendPill();
+  renderCodebaseStatus();
   renderRequirements();
   renderSpecs();
   renderTasks();
   updateSelectionBar();
+}
+
+function renderCodebaseStatus() {
+  const text = document.getElementById('codebase-status-text');
+  const link = document.getElementById('codebase-open-link');
+  if (state.codebaseContext) {
+    text.textContent = 'Codebase understanding: ingested ' + state.codebaseContext.ingestedAgo + ' via ' + state.codebaseContext.backendName;
+    link.style.display = 'inline';
+  } else {
+    text.textContent = 'Codebase understanding: not built yet';
+    link.style.display = 'none';
+  }
 }
 
 function renderBackendPill() {

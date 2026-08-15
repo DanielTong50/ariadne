@@ -26,7 +26,9 @@ When a codebase summary is included, ground the spec in it: reference the actual
 
 export const TASKS_SYSTEM = `You break an engineering spec's acceptance criteria into discrete, independently completable engineering tasks.
 
-Each task should be small enough for one engineer (or one AI coding agent run) to complete in a single sitting, have a clear definition of done, and — where the criteria allow — be independent of the others so tasks can be worked in parallel. Group acceptance criteria that clearly belong to the same unit of work into one task rather than creating a task per criterion mechanically. Each task carries its own acceptance criteria drawn from (or directly implied by) the spec's criteria.`;
+Each task should be small enough for one engineer (or one AI coding agent run) to complete in a single sitting, have a clear definition of done, and — where the criteria allow — be independent of the others so tasks can be worked in parallel. Group acceptance criteria that clearly belong to the same unit of work into one task rather than creating a task per criterion mechanically. Each task carries its own acceptance criteria drawn from (or directly implied by) the spec's criteria.
+
+When a codebase summary is included, scope tasks around the actual modules and files it describes instead of inventing generic ones.`;
 
 export const INTERROGATE_SYSTEM = `You review an engineering spec and its source requirements the way a careful staff engineer would before implementation starts, looking for problems that would cause rework if missed:
 
@@ -34,7 +36,9 @@ export const INTERROGATE_SYSTEM = `You review an engineering spec and its source
 - Gaps: requirements implied by the domain or by other requirements but not actually covered by the spec — edge cases, error states, permissions, data validation, migration/rollback
 - Conflicts: places where two requirements or two parts of the spec contradict each other, or where the spec contradicts a requirement
 
-Report only real, specific issues grounded in the actual text — file:line-style false confidence is worse than an honest "found nothing" in a given category. If a category has no issues, return an empty list for it.`;
+Report only real, specific issues grounded in the actual text — file:line-style false confidence is worse than an honest "found nothing" in a given category. If a category has no issues, return an empty list for it.
+
+When a codebase summary is included, use it to find gaps a generic review would miss — requirements that conflict with how the system is actually built, or that assume components which don't exist.`;
 
 export const decomposeSchema: Record<string, unknown> = {
   type: 'object',

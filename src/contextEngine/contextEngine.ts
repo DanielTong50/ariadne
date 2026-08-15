@@ -173,21 +173,23 @@ export class ContextEngine {
     );
   }
 
-  async generateTasks(spec: Spec, specMarkdown: string): Promise<GeneratedTask[]> {
+  async generateTasks(spec: Spec, specMarkdown: string, codebaseSummary?: string): Promise<GeneratedTask[]> {
     const criteria = spec.acceptanceCriteria.map((c, i) => `${i + 1}. ${c}`).join('\n');
+    const codebaseBlock = codebaseSummary ? `\n\nThese tasks will be implemented in this codebase:\n${codebaseSummary}` : '';
     const result = await this.createStructured<{ tasks: GeneratedTask[] }>(
       TASKS_SYSTEM,
-      `Spec: ${spec.title}\n\n${specMarkdown}\n\nAcceptance criteria:\n${criteria}\n\nBreak this into discrete engineering tasks.`,
+      `Spec: ${spec.title}\n\n${specMarkdown}\n\nAcceptance criteria:\n${criteria}\n\nBreak this into discrete engineering tasks.${codebaseBlock}`,
       tasksSchema,
     );
     return result.tasks;
   }
 
-  async interrogate(spec: Spec, specMarkdown: string, requirements: Requirement[]): Promise<SpecHealth> {
+  async interrogate(spec: Spec, specMarkdown: string, requirements: Requirement[], codebaseSummary?: string): Promise<SpecHealth> {
     const reqText = requirements.map((r) => `- [${r.type}] ${r.title}: ${r.description}`).join('\n');
+    const codebaseBlock = codebaseSummary ? `\n\nThis spec will be implemented in this codebase:\n${codebaseSummary}` : '';
     const result = await this.createStructured<Omit<SpecHealth, 'checkedAt'>>(
       INTERROGATE_SYSTEM,
-      `Spec: ${spec.title}\n\n${specMarkdown}\n\nSource requirements:\n${reqText || '(none linked)'}`,
+      `Spec: ${spec.title}\n\n${specMarkdown}\n\nSource requirements:\n${reqText || '(none linked)'}${codebaseBlock}`,
       interrogateSchema,
     );
     return { ...result, checkedAt: nowIso() };

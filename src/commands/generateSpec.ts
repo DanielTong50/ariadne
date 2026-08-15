@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { AppContext } from '../appContext';
 import { Spec } from '../types';
-import { summarizeWorkspace } from '../utils/codebaseContext';
+import { resolveCodebaseContext } from '../utils/codebaseContext';
 
 /**
  * /ariadne-spec — turns selected Requirements into an engineering spec (Markdown
@@ -40,7 +40,7 @@ export async function runGenerateSpec(app: AppContext, requirementIds?: string[]
     { location: vscode.ProgressLocation.Notification, title: 'Ariadne: Generating spec…' },
     async () => {
       try {
-        const codebaseSummary = await summarizeWorkspace();
+        const codebaseSummary = await resolveCodebaseContext(app);
         const generated = await app.engine.generateSpec(selected, codebaseSummary);
         const spec = await app.store.addSpec(
           {

@@ -118,6 +118,12 @@
         "icon": "$(type-hierarchy)"
       },
       {
+        "command": "ariadne.ingestCodebase",
+        "title": "Ariadne: Ingest Codebase (Build Context)",
+        "category": "Ariadne",
+        "icon": "$(database)"
+      },
+      {
         "command": "ariadne.refresh",
         "title": "Ariadne: Refresh",
         "category": "Ariadne",
